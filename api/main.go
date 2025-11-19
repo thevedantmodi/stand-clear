@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/thevedantmod/stand-clear/api/board"
+	"github.com/thevedantmod/stand-clear/board"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
