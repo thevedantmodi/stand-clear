@@ -20,7 +20,6 @@ func main() {
 		N, err := strconv.Atoi(Nstr)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error":   true,
 				"message": err.Error(),
 			})
 			return

@@ -34,4 +34,20 @@ Query Parameters:
     - line: What line you wish to know the times of. Must select exactly one line from lines defined above.
     - stop_id: What stop you wish to know the times of. Find the stop_id in subway_config/stops.txt and query based on that.
     - N: How many arrivals you wish to know about. Optional parameter, default 10.
+Responses:
+    Success (200):
+        returns a list of arrivals object in JSON format
+            each element of the list has
+                - `line`: a string representing the line
+                - `direction`: a string representing which direction the train is going
+                    a "0" indicates north and a "1" indicates south. "north" and "south" are defined by the MTA.
+                - `color`: a string representing the color of the line emblem as a hexcolor
+                - `stop`: a string representing the stop_id. Follows the definition described in the parameter
+                - `time_to_arrival`: a string representing the time to arrival *in seconds*
+
+    Error (500):
+        returns a JSON describing the error
+            has a single file called message that contains the error thrown by the runtime.
+
+    
 ```
