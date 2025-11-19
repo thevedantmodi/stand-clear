@@ -1,0 +1,37 @@
+# Stand Clear [of the closing doors]
+
+## Backend
+
+A go backend that interfaces with the MTA API and answers the question, when's the next train?
+
+### Running
+
+Can use `go run .` after cloning to start the web server OR
+`go build .` to build an executable to start the web server
+
+By default, this runs on localhost on port 8080, but you can change it.
+
+#### Endpoints
+
+```
+
+lines :=   A | C | E
+         | B | D | F | M
+         | G
+         | L
+         | J | Z
+         | N | Q | R | W
+         | 1 | 2 | 3
+         | 4 | 5 | 6
+         | 7
+         | GS
+         | FS
+         | H
+
+Endpoint: /arrivals
+Method: GET
+Query Parameters:
+    - line: What line you wish to know the times of. Must select exactly one line from lines defined above.
+    - stop_id: What stop you wish to know the times of. Find the stop_id in subway_config/stops.txt and query based on that.
+    - N: How many arrivals you wish to know about. Optional parameter, default 10.
+```
