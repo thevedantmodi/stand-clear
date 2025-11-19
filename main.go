@@ -28,6 +28,10 @@ func main() {
 		arrivals := board.GetArrivals(line, stop_id, N)
 		ctx.IndentedJSON(http.StatusOK, arrivals)
 	})
+
+	router.GET("/", func(ctx *gin.Context) {
+		ctx.String(http.StatusOK, "Hello from the board!")
+	})
 	router.Run("localhost:8080")
 	// file, err := os.Open("subway_config/routes.txt")
 
