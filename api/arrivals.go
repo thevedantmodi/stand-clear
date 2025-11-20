@@ -1,40 +1,60 @@
 package handler
 
 import (
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"github.com/thevedantmod/stand-clear/board"
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	router := gin.Default()
+	line := r.URL.Query().Get("line")
+	stopID := r.URL.Query().Get("stop_id")
+	nStr := r.URL.Query().Get("N")
 
-	router.GET("/arrivals", func(ctx *gin.Context) {
-		fmt.Println(ctx.Params)
-		line := ctx.Query("line")
-		stop_id := ctx.Query("stop_id")
-		Nstr := ctx.DefaultQuery("N", "10")
-		N, err := strconv.Atoi(Nstr)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"message": err.Error(),
-			})
-			return
-		}
+	if nStr == "" {
+		nStr = "10"
+	}
 
-		arrivals := board.GetArrivals(line, stop_id, N)
-		ctx.IndentedJSON(http.StatusOK, arrivals)
-	})
+	N, err := strconv.Atoi(nStr)
+	if err != nil {
+		http.Error(w, "Invalid N parameter", http.StatusBadRequest)
+		return
+	}
 
-	router.GET("/", func(ctx *gin.Context) {
-		ctx.String(http.StatusOK, "The next stop is...your mom's house.")
-	})
+	arrivals := board.GetArrivals(line, stopID, N)
 
-	router.ServeHTTP(w, r)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(arrivals)
 }
+
+// func Handler(w http.ResponseWriter, r *http.Request) {
+// 	router := gin.Default()
+
+// 	router.GET("/arrivals", func(ctx *gin.Context) {
+// 		fmt.Println(ctx.Params)
+// 		line := ctx.Query("line")
+// 		stop_id := ctx.Query("stop_id")
+// 		Nstr := ctx.DefaultQuery("N", "10")
+// 		N, err := strconv.Atoi(Nstr)
+// 		if err != nil {
+// 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+// 				"message": err.Error(),
+// 			})
+// 			return
+// 		}
+
+// 		arrivals := board.GetArrivals(line, stop_id, N)
+// 		ctx.IndentedJSON(http.StatusOK, arrivals)
+// 	})
+
+// 	router.GET("/", func(ctx *gin.Context) {
+// 		ctx.String(http.StatusOK, "The next stop is...your mom's house.")
+// 	})
+
+// 	router.ServeHTTP(w, r)
+// }
 
 // func main() {
 
