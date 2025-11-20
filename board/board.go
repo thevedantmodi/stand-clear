@@ -46,23 +46,17 @@ func init() {
 	// isa_blue := hex_color("#0078C6")
 
 	/* defined in ../subway_config/routes.txt */
-	IND_eight_ave := []line_id{"A", "C", "E"}
-	IND_sixth_ave := []line_id{"B", "D", "F", "M"}
+	IND_eight_ave := []line_id{"A", "C", "E", "H"}
+	IND_sixth_ave := []line_id{"B", "D", "F", "FX", "M", "FS"}
 	IND_crosstown := []line_id{"G"}
 	BMT_canarsie := []line_id{"L"}
 	BMT_nassau := []line_id{"J", "Z"}
 	BMT_broadway := []line_id{"N", "Q", "R", "W"} // my favorite
 	IRT_broadway_seventh := []line_id{"1", "2", "3"}
-	IRT_lex_ave := []line_id{"4", "5", "6"} // my second favorite
-	IRT_flushing := []line_id{"7"}          // my third favorite
+	IRT_lex_ave := []line_id{"4", "5", "6", "6X"} // my second favorite
+	IRT_flushing := []line_id{"7", "7X", "GS"}    // my third favorite
 	// if only!
 	// IND_second_ave := []string{"T"}
-	// NEEDSWORK add shuttles
-	// GS 42 St Shuttle
-	// FS Franklin Avenue Shuttle
-	// H Rockaway Park Shuttl
-
-	// NEEDSWORK initialize linesToHexColors
 
 	SIR := []line_id{"SI"}
 
@@ -195,10 +189,10 @@ func request(line string, stop string) ([]Arrival, error) {
 	return arrivals, nil
 }
 
-func GetArrivals(line string, stop string, N int) []Arrival {
+func GetArrivals(line string, stop string, N int) ([]Arrival, error) {
 	allArrivals, err := request(line, stop)
 	if err != nil {
-		return nil
+		return nil, errors.New("Line not found: " + line)
 	}
 
 	sort.Slice(allArrivals, func(i, j int) bool {
@@ -213,5 +207,5 @@ func GetArrivals(line string, stop string, N int) []Arrival {
 		}
 	}
 
-	return arrivals[:min(N, len(arrivals))]
+	return arrivals[:min(N, len(arrivals))], nil
 }

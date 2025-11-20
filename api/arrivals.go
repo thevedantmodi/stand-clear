@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -23,7 +24,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	arrivals := board.GetArrivals(line, stopID, N)
+	fmt.Printf("line is '%s'", line)
+
+	arrivals, err := board.GetArrivals(line, stopID, N)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(arrivals)
