@@ -11,19 +11,24 @@ Can use `go run .` after cloning to start the web server OR
 
 By default, this runs on localhost on port 8080, but you can change it.
 
+**NEW**: can query using the deployed URI `stand-clear.vercel.app/api/arrivals` OR use the alias at `vedantmodi.com/stand-clear`.
+Running an HTTP GET request with the parameters specified below will let you run the program.
+
+Example: `curl 'https://www.vedantmodi.com/stand-clear?line=6&stop_id=640N'` will get you the upcoming Uptown departures of the 6 train from Brooklyn Bridge-City Hall. 
+
 #### Endpoints
 
 ```
 
 lines :=   A | C | E
-         | B | D | F | M
+         | B | D | F | FX | M
          | G
          | L
          | J | Z
          | N | Q | R | W
          | 1 | 2 | 3
-         | 4 | 5 | 6
-         | 7
+         | 4 | 5 | 6 | 6X
+         | 7 | 7X
          | GS
          | FS
          | H
@@ -49,5 +54,5 @@ Responses:
         returns a JSON describing the error
             has a single file called message that contains the error thrown by the runtime.
 
-    
+
 ```
