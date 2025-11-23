@@ -4,6 +4,7 @@ import (
 	"embed"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"sort"
@@ -176,15 +177,22 @@ func fill_arrival(entity *gtfs.FeedEntity, line string, stop_id string, i int) [
 	time_to_arrival := arrival_time - time.Now().Unix()
 
 	var direction int
-	if length := len(line); line[length-1] == 'N' {
+	if length := len(stop_id); stop_id[length-1] == 'N' {
 		direction = 0
 	} else {
+		fmt.Println("setting direction to 1")
 		direction = 1
 	}
 
 	friendly_name := StopsToFriendlies[stop_id]
 
-	return []Arrival{{Stop: stop_id, TimeToArrival: time_to_arrival, Direction: strconv.Itoa(direction), Color: string(LinesToColors[line_id(line)]), Line: line, Friendly_Stop: friendly_name}}
+	return []Arrival{{
+		Stop:          stop_id,
+		TimeToArrival: time_to_arrival,
+		Direction:     strconv.Itoa(direction),
+		Color:         string(LinesToColors[line_id(line)]),
+		Line:          line,
+		Friendly_Stop: friendly_name}}
 }
 
 func request(line string, stop string) ([]Arrival, error) {
