@@ -49,6 +49,7 @@ Responses:
                 - `color`: a string representing the color of the line emblem as a hexcolor
                 - `stop`: a string representing the stop_id. Follows the definition described in the parameter
                 - `time_to_arrival`: a string representing the time to arrival *in seconds*
+                - `friendly_stop`: a readable name for the stop
 
     Error (500):
         returns a JSON describing the error

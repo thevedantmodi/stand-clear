@@ -1,11 +1,14 @@
 package board
 
 import (
+	"embed"
+	"encoding/csv"
 	"errors"
 	"io"
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
@@ -18,6 +21,10 @@ type URI string
 
 var LinesToURI map[line_id]URI
 var LinesToColors map[line_id]hex_color
+var StopsToFriendlies map[string]string
+
+//go:embed stops.txt
+var stopsFS embed.FS
 
 type Arrival struct {
 	TimeToArrival int64  `json:"time_to_arrival"`
@@ -25,12 +32,19 @@ type Arrival struct {
 	Direction     string `json:"direction"`
 	Color         string `json:"color"`
 	Stop          string `json:"stop"`
+	Friendly_Stop string `json:"friendly_stop,omitempty"` /* adheres to stops.txt */
 }
 
 func init() {
 	LinesToURI = make(map[line_id]URI)
 	LinesToColors = make(map[line_id]hex_color)
+	StopsToFriendlies = make(map[string]string)
 
+	init_linestoURI_linestoColors()
+	init_stopstoFriendlies()
+}
+
+func init_linestoURI_linestoColors() {
 	/* defined in https://www.mta.info/document/168976 */
 	blue := hex_color("#0062CF")
 	orange := hex_color("#EB6800")
@@ -105,7 +119,26 @@ func init() {
 		LinesToURI[line] = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si"
 		LinesToColors[line] = mta_blue
 	}
+}
 
+func init_stopstoFriendlies() {
+	data, err := stopsFS.ReadFile("stops.txt")
+	if err != nil {
+		panic("failed to open stops.txt: " + err.Error())
+	}
+
+	reader := csv.NewReader(strings.NewReader(string(data)))
+
+	f_lines, err := reader.ReadAll() // [][]string
+	if err != nil {
+		panic("failed to read CSV: " + err.Error())
+	}
+
+	for _, line := range f_lines[1:] {
+		stop_id := line[0]
+		friendly := line[1]
+		StopsToFriendlies[stop_id] = friendly
+	}
 }
 
 func fill_arrival(entity *gtfs.FeedEntity, line string, stop_id string, i int) []Arrival {
@@ -149,7 +182,9 @@ func fill_arrival(entity *gtfs.FeedEntity, line string, stop_id string, i int) [
 		direction = 1
 	}
 
-	return []Arrival{{Stop: stop_id, TimeToArrival: time_to_arrival, Direction: strconv.Itoa(direction), Color: string(LinesToColors[line_id(line)]), Line: line}}
+	friendly_name := StopsToFriendlies[stop_id]
+
+	return []Arrival{{Stop: stop_id, TimeToArrival: time_to_arrival, Direction: strconv.Itoa(direction), Color: string(LinesToColors[line_id(line)]), Line: line, Friendly_Stop: friendly_name}}
 }
 
 func request(line string, stop string) ([]Arrival, error) {
@@ -190,6 +225,10 @@ func request(line string, stop string) ([]Arrival, error) {
 }
 
 func GetArrivals(line string, stop string, N int) ([]Arrival, error) {
+	_, ok := StopsToFriendlies[stop]
+	if !ok {
+		return nil, errors.New("Stop not found: " + stop)
+	}
 	allArrivals, err := request(line, stop)
 	if err != nil {
 		return nil, errors.New("Line not found: " + line)
