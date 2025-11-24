@@ -10,6 +10,11 @@ import (
 )
 
 func Handler(w http.ResponseWriter, r *http.Request) {
+	/* change here if need to restrict API access. this is public data now, so will allow anyone */
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Origin, Accept")
+
 	line := r.URL.Query().Get("line")
 	stopID := r.URL.Query().Get("stop_id")
 	nStr := r.URL.Query().Get("N")
