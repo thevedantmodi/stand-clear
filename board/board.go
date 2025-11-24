@@ -260,10 +260,17 @@ func fill_destination_dir(line string, borough string, direction string) string 
 
 	switch borough {
 	case "Manhattan":
-		if direction == "N" {
-			return "Uptown to " + north
+		if line != "GS" {
+			if direction == "N" {
+				return "Uptown to " + north
+			}
+			return "Downtown to " + south
+		} else {
+			if direction == "N" {
+				return "To " + north
+			}
+			return "To " + south
 		}
-		return "Downtown to " + south
 
 	case "Brooklyn":
 		if direction == "N" {
