@@ -4,7 +4,6 @@ import (
 	"embed"
 	"encoding/csv"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"sort"
@@ -14,6 +13,10 @@ import (
 
 	"github.com/MobilityData/gtfs-realtime-bindings/golang/gtfs"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/paulmach/orb"
+	"github.com/paulmach/orb/geojson"
+	"github.com/paulmach/orb/planar"
 )
 
 type line_id string
@@ -23,23 +26,64 @@ type URI string
 var LinesToURI map[line_id]URI
 var LinesToColors map[line_id]hex_color
 var StopsToFriendlies map[string]string
+var StopsToDestinations map[string]string
+var LinesToDirections map[string]string
 
 //go:embed stops.txt
 var stopsFS embed.FS
 
+//go:embed boroughs.geojson
+var boroughsFS embed.FS
+
+var Terminals = map[string][2]string{
+	"1":  {"Van Cortlandt Park-242 St", "South Ferry"},
+	"2":  {"Wakefield-241 St", "Flatbush Av-Brooklyn College"},
+	"3":  {"Harlem-148 St", "New Lots Av"},
+	"4":  {"Woodlawn", "Crown Heights-Utica Av"},
+	"5":  {"Eastchester-Dyre Av", "Flatbush Av-Brooklyn College"},
+	"6":  {"Pelham Bay Park", "Brooklyn Bridge-City Hall"},
+	"6X": {"Pelham Bay Park", "Brooklyn Bridge-City Hall"},
+	"7":  {"Flushing-Main St", "34 St-Hudson Yards"},
+	"A":  {"Inwood-207 St", "Far Rockaway-Mott Av"},
+	"C":  {"168 St", "Euclid Av"},
+	"E":  {"Jamaica Center-Parsons/Archer", "World Trade Center"},
+	"B":  {"Bedford Park Blvd", "Brighton Beach"},
+	"D":  {"Norwood-205 St", "Coney Island-Stillwell Av"},
+	"F":  {"Jamaica-179 St", "Coney Island-Stillwell Av"},
+	"FX": {"Jamaica-179 St", "Coney Island-Stillwell Av"},
+	"M":  {"Forest Hills-71 Av", "Metropolitan Av"},
+	"N":  {"Astoria-Ditmars Blvd", "Coney Island-Stillwell Av"},
+	"Q":  {"96 St", "Coney Island-Stillwell Av"},
+	"R":  {"Forest Hills-71 Av", "Bay Ridge-95 St"},
+	"W":  {"Astoria-Ditmars Blvd", "Whitehall St"},
+	"G":  {"Court Sq", "Church Av"},
+	"J":  {"Jamaica Center-Parsons/Archer", "Broad St"},
+	"Z":  {"Jamaica Center-Parsons/Archer", "Broad St"},
+	"L":  {"8 Av", "Canarsie-Rockaway Pkwy"},
+	/* TODO add shuttles */
+}
+
 type Arrival struct {
-	TimeToArrival int64  `json:"time_to_arrival"`
-	Line          string `json:"line"` /* adheres to routes.txt */
-	Direction     string `json:"direction"`
-	Color         string `json:"color"`
-	Stop          string `json:"stop"`
-	Friendly_Stop string `json:"friendly_stop,omitempty"` /* adheres to stops.txt */
+	TimeToArrival    int64  `json:"time_to_arrival"`
+	Line             string `json:"line"` /* adheres to routes.txt */
+	Direction        string `json:"direction"`
+	Color            string `json:"color"`
+	Stop             string `json:"stop"`
+	Friendly_Stop    string `json:"friendly_stop,omitempty"` /* adheres to stops.txt */
+	Destination_Stop string `json:"destination_stop,omitempty"`
+	Destination_Dir  string `json:"destination_direction,omitempty"`
+}
+
+type borough struct {
+	Name     string
+	Geometry orb.Geometry
 }
 
 func init() {
 	LinesToURI = make(map[line_id]URI)
 	LinesToColors = make(map[line_id]hex_color)
 	StopsToFriendlies = make(map[string]string)
+	StopsToDestinations = make(map[string]string)
 
 	init_linestoURI_linestoColors()
 	init_stopstoFriendlies()
@@ -135,10 +179,107 @@ func init_stopstoFriendlies() {
 		panic("failed to read CSV: " + err.Error())
 	}
 
+	data1, err := boroughsFS.ReadFile("boroughs.geojson")
+	if err != nil {
+		panic("failed to read geoJSON: " + err.Error())
+	}
+
+	fc, err := geojson.UnmarshalFeatureCollection(data1)
+	if err != nil {
+		panic("failed to read geoJSON: " + err.Error())
+	}
+
+	boroughs := make([]borough, 0, len(fc.Features))
+	for _, f := range fc.Features {
+		name, _ := f.Properties["BoroName"].(string)
+		boroughs = append(boroughs, borough{
+			Name:     name,
+			Geometry: f.Geometry,
+		})
+	}
+
 	for _, line := range f_lines[1:] {
 		stop_id := line[0]
 		friendly := line[1]
+		lat, err := strconv.ParseFloat(line[2], 64)
+		if err != nil {
+			panic("error: " + err.Error())
+		}
+		lon, err := strconv.ParseFloat(line[3], 64)
+		if err != nil {
+			panic("error: " + err.Error())
+		}
 		StopsToFriendlies[stop_id] = friendly
+		StopsToDestinations[stop_id] = init_stopToDestination(lon, lat, boroughs)
+	}
+}
+
+func init_stopToDestination(lon float64, lat float64, boroughs []borough) string {
+	pt := orb.Point{lon, lat}
+	for _, b := range boroughs {
+		switch g := b.Geometry.(type) {
+		case orb.Polygon:
+			if planar.PolygonContains(g, pt) {
+				return b.Name
+			}
+		case orb.MultiPolygon:
+			if planar.MultiPolygonContains(g, pt) {
+				return b.Name
+			}
+		}
+	}
+	panic("Unknown stop")
+	return ""
+}
+
+func fill_destination_stop(line string, direction string) string {
+	terms, ok := Terminals[line]
+	if !ok {
+		return ""
+	}
+
+	if direction == "N" {
+		return terms[0] // north terminal
+	}
+	return terms[1] // south terminal
+}
+
+func fill_destination_dir(line string, borough string, direction string) string {
+	terms, ok := Terminals[line]
+	if !ok {
+		return ""
+	}
+
+	north := terms[0]
+	south := terms[1]
+
+	switch borough {
+	case "Manhattan":
+		if direction == "N" {
+			return "Uptown to " + north
+		}
+		return "Downtown to " + south
+
+	case "Brooklyn":
+		if direction == "N" {
+			return "To " + north
+		}
+		return "To " + south
+
+	case "Queens":
+		if direction == "N" {
+			return "To " + north
+		}
+		return "To " + south
+
+	case "Bronx":
+		if direction == "N" {
+			return "To " + north
+		}
+		return "To " + south
+
+	default:
+		return "To " + terms[1]
 	}
 }
 
@@ -177,22 +318,26 @@ func fill_arrival(entity *gtfs.FeedEntity, line string, stop_id string, i int) [
 	time_to_arrival := arrival_time - time.Now().Unix()
 
 	var direction int
+	var dir_str string
 	if length := len(stop_id); stop_id[length-1] == 'N' {
 		direction = 0
+		dir_str = "N"
 	} else {
-		fmt.Println("setting direction to 1")
 		direction = 1
+		dir_str = "S"
 	}
 
 	friendly_name := StopsToFriendlies[stop_id]
 
 	return []Arrival{{
-		Stop:          stop_id,
-		TimeToArrival: time_to_arrival,
-		Direction:     strconv.Itoa(direction),
-		Color:         string(LinesToColors[line_id(line)]),
-		Line:          line,
-		Friendly_Stop: friendly_name}}
+		Stop:             stop_id,
+		TimeToArrival:    time_to_arrival,
+		Direction:        strconv.Itoa(direction),
+		Color:            string(LinesToColors[line_id(line)]),
+		Line:             line,
+		Friendly_Stop:    friendly_name,
+		Destination_Stop: fill_destination_stop(line, dir_str),
+		Destination_Dir:  fill_destination_dir(line, StopsToDestinations[stop_id], dir_str)}}
 }
 
 func request(line string, stop string) ([]Arrival, error) {
