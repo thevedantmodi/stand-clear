@@ -60,6 +60,10 @@ var Terminals = map[string][2]string{
 	"J":  {"Jamaica Center-Parsons/Archer", "Broad St"},
 	"Z":  {"Jamaica Center-Parsons/Archer", "Broad St"},
 	"L":  {"8 Av", "Canarsie-Rockaway Pkwy"},
+	"GS": {"Grand Central-42 St", "Times Sq-42 St"},
+	"FS": {"Franklin Av", "Prospect Park"},
+	"H":  {"Broad Channel", "Rockaway Park"},
+
 	/* TODO add shuttles */
 }
 

@@ -50,6 +50,8 @@ Responses:
                 - `stop`: a string representing the stop_id. Follows the definition described in the parameter
                 - `time_to_arrival`: a string representing the time to arrival *in seconds*
                 - `friendly_stop`: a readable name for the stop
+                - `destination_stop`: the destination of the train
+                - `destination_direction`: the destination string of the train
 
     Error (500):
         returns a JSON describing the error
