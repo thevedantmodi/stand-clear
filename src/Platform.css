@@ -1,0 +1,17 @@
+.loading-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace; /* font-mono */
+  font-size: 1.25rem; /* text-xl */
+  line-height: 1.75rem;
+  letter-spacing: 0.05em; /* tracking-wider */
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; /* animate-pulse */
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,83 @@
+.board {
+  background: #0b0d0eff;
+  /* closer to real MTA LCD boards */
+  color: white;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  padding: 1rem 1.25rem;
+  width: 560px;
+  border-radius: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 0;
+}
+
+.with-divider {
+  border-bottom: 1px solid rgba(70, 130, 180, 0.45);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 0.9rem;
+}
+
+.line-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1.15rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.direction-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.direction {
+  font-weight: 700;
+  font-size: 1.15rem;
+}
+
+.stop {
+  color: #87b8ff;
+  font-size: 0.9rem;
+}
+
+.time {
+  font-weight: 700;
+  font-size: 1.65rem;
+  text-align: right;
+  min-width: 70px;
+  font-feature-settings: "tnum";
+  /* tabular numbers — huge realism boost */
+}
+
+
+.station-name {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #e3e3e3;
+  text-align: center;
+  padding: 0.6rem 0 1rem;
+  letter-spacing: 0.5px;
+}
+
+.arriving {
+  animation: pulse 1.1s infinite ease-in-out;
+  color: #00ffea; /* optional MTA-glow look */
+  font-weight: bold;
+}
+
+@keyframes pulse {
+  0%   { opacity: 1; }
+  50%  { opacity: 0.35; }
+  100% { opacity: 1; }
+}
