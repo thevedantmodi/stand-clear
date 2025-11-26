@@ -49,7 +49,7 @@ function App() {
       }}
     >
       {visiblePlatforms.map((p) => (
-        <Platform {...p} />
+        <Platform key={`${p.line}-${p.stop_id}`} {...p} />
       ))}
     </div>
   );
