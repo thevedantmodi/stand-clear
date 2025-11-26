@@ -24,9 +24,8 @@ function App() {
   });
 
   const defaultPlatforms = [
-    { line: "GS", stop_id: "902S", N: "3" },
-    { line: "F", stop_id: "D18N", N: "3" },
-    // { line: "Q", stop_id: "R16S", N: "3" },
+    { line: "4", stop_id: "631N", N: "3" },
+    { line: "4", stop_id: "631S", N: "3" },
   ];
 
   // fallback if no URL params

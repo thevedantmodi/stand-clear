@@ -72,7 +72,7 @@
 
 .arriving {
   animation: pulse 1.1s infinite ease-in-out;
-  color: #00ffea; /* optional MTA-glow look */
+  color: #5a5d5d; /* optional MTA-glow look */
   font-weight: bold;
 }
 
