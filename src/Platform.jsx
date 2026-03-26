@@ -22,7 +22,7 @@ function Platform({ line, stop_id, N = 10 }) {
             if (!mounted) return;
 
             try {
-                const res = await fetch(`https://stand-clear.vercel.app/api/arrivals/?line=${line}&stop_id=${stop_id}&N=${N}`);
+                const res = await fetch(`https://standclear.vedantmodi.com/api/arrivals/?line=${line}&stop_id=${stop_id}&N=${N}`);
                 if (!res.ok) {
                     throw new Error(`Server responded with status ${res.status}`);
                 }
